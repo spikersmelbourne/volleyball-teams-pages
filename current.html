@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Volleyball Teams — Live View</title>
+
+  <style>
+    body { font-family: system-ui, Arial; padding:16px; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px; }
+    .card { border:1px solid #ccc; border-radius:10px; padding:12px; }
+    .missing { color:red; font-weight:bold; margin-top:4px; }
+    .pos { font-weight:bold; }
+    #loading { font-size:18px; opacity:.7; }
+  </style>
+</head>
+<body>
+
+<h2>Volleyball Teams — Live</h2>
+<div id="loading">Carregando times...</div>
+<div id="container"></div>
+
+<script>
+// coloque aqui o link do Render
+const API_URL = "https://SEU-RENDER-APP.onrender.com/teams-json";
+
+async function loadTeams() {
+  const r = await fetch(API_URL + "?v=" + Date.now());
+  const data = await r.json();
+
+  if (!data.ok) {
+    document.getElementById("loading").innerText = "Nenhum time gerado ainda.";
+    return;
+  }
+
+  const teams = data.teams;
+  let html = '<div class="grid">';
+
+  for (const t of teams) {
+    html += `<div class="card">
+      <h3>Time ${t.team}</h3>
+      <div>Players: ${t.players.filter(p => !p.is_missing).length}</div>`;
+
+    if (t.missing === "middle") {
+      html += `<div class="missing">Missing — middle</div>`;
+    }
+
+    html += "<ul>";
+    for (const p of t.players) {
+      if (p.is_missing) continue;
+      html += `<li>${p.name} — <span class="pos">${p.pos}</span></li>`;
+    }
+    html += "</ul></div>";
+  }
+
+  html += "</div>";
+
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("container").innerHTML = html;
+}
+
+loadTeams();
+setInterval(loadTeams, 15000); // recarrega a cada 15 segundos
+</script>
+
+</body>
+</html>
